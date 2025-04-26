@@ -30,6 +30,19 @@
         end
     end
 
+    % Translate Chord into Extended notation
+    fun {ChordToExtended Chord}
+        case Chord of H|T then 
+            case H of C|N then {ChordToExtended C}|{ChordToExtended N}
+            else
+                {NoteToExtended H}|{ChordToExtended T}
+            end
+        else
+            Chord
+        end
+    end
+                
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     
@@ -38,6 +51,14 @@
         nil
     end
 
-    Tune = [b b c5 d5 d5 c5 b a g g a b]
+    fun {ReadPartition P}
+        case P of nil then nil
+        [] H|T then 
+            case H of C|N then {ChordToExtended C}|{ReadPartition N}
+            else
+                {NoteToExtended H}| {ReadPartition T}
+            end
+        end
+    end
 
 end
