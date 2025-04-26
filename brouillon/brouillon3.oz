@@ -1,30 +1,27 @@
 declare
-TOT_DUR
-DURATION = {NewCell 1.0}
-OCTAVE = {NewCell 4}
-
-
+/*Extend each note */
 % Translate a note to the extended notation.
 fun {NoteToExtended Note}
     case Note
     of nil then nil 
-    [] note(name octave sharp duration instrument) then note(name:namt octave:octave sharp:true duration:duration instrument:none)
-    [] silence(duration: _) then silence(duration: 17.0)
+    [] note(...) then Note
+    [] silence(duration: _) then Note
     [] silence then silence(duration:1.0)
-    [] Name#Octave then note(name:Name octave:Octave sharp:true duration:@DURATION instrument:none)
+    [] Name#Octave then note(name:Name octave:Octave sharp:true duration:1.0 instrument:none)
     [] Atom then
         case {AtomToString Atom}
         of [_] then
-            note(name:Atom octave:@OCTAVE sharp:false duration:@DURATION instrument:none)
+            note(name:Atom octave:4 sharp:false duration:1.0 instrument:none)
         [] [N O] then
             note(name:{StringToAtom [N]}
                 octave:{StringToInt [O]}
                 sharp:false
-                duration:@DURATION
+                duration:1.0
                 instrument: none)
         end
     end
 end
+
 
 % Translate Chord into Extended notation
 fun {ChordToExtended Chord}
@@ -39,12 +36,11 @@ fun {ChordToExtended Chord}
 end
 
 
-
 fun {PartitionToExtended P}
-    % we could in theory call 1 thread for ChordExtension and 1 for Note extension. Theory --> bc of oz dataflow, can wait if value is required.
     case P of nil then nil
     [] H|T then 
         case H of C|N then {ChordToExtended H}|{PartitionToExtended T}
+        [] stretch(...) then stretch(factor:H.factor {PartitionToExtended H.1})|{PartitionToExtended T}
         else
             {NoteToExtended H}| {PartitionToExtended T}
         end
@@ -52,7 +48,13 @@ fun {PartitionToExtended P}
 end
 
 
-Tune = [b b c5 d5 [[d5 c5] [b a] g] g a b]
+Tune = [b b c5 d5 d5 c5 b a g g a b]
+End1 = [stretch(factor:1.5 [b]) stretch(factor:0.5 [a]) stretch(factor:2.0 [a])]
+End2 = [stretch(factor:1.5 [a]) stretch(factor:0.5 [g]) stretch(factor:2.0 [g])]
+Interlude = [a a b g a stretch(factor:0.5 [b c5])
+                b g a stretch(factor:0.5 [b c5])
+            b a g a stretch(factor:2.0 [d]) ]
 
-P = {PartitionToExtended Tune}
-{Browse  P}
+% This is not a music.
+Partition = [Tune End1 Tune End2 Interlude Tune End2]
+{Browse {PartitionToExtended [End1]}}
