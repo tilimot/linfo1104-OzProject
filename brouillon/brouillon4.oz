@@ -1,6 +1,6 @@
 declare
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% Extend Partition %%%%%%%%%%%%%%%%%%%%%%%%
 /*Funcs to transform each note into extended note */
 
 % Extend each note without transformation
@@ -41,8 +41,9 @@ fun{PartitionToExtended P}
 end 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% Apply transform %%%%%%%%%%%%%%%%%%%%%%%%
 
+/* Call corresponding func to transform required */
 
 fun{ApplyTransform P}
     case P of nil then nil
@@ -54,7 +55,7 @@ fun{ApplyTransform P}
 end
 
 
-%%%%% Stretch %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% Stretch Transform %%%%%%%%%%%%%%%%%%%%%%%%
 
 /* Return a list of stretched extended note */
 
@@ -70,7 +71,7 @@ fun{Stretch P F}
     end
 end
 
-%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% "Test"(or small verifs) %%%%%%%%%%%%%%%%%%%%%%%%
 
 Tune = [b b c5 d5 d5 c5 b a g g a b]
 End1 = [stretch(factor:1.5 [b]) stretch(factor:0.5 [a]) stretch(factor:2.0 [a])]
