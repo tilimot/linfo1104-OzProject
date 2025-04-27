@@ -13,6 +13,53 @@ define
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%
+% FONCTIONS UTILITAIRES
+%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+   %x tous les échantillons par
+   fun {ScaleSample Factor Samples}
+      case Samples of
+         nil then nil
+      [] H|T then (H*Factor) | {ScaleSample Factor T}
+      end
+   end
+
+   %add 2 listes d'échantillons
+   fun {AddSample L1 L2}
+      case L1#L2 of
+         nil#nil then nil
+      [] (H1|T1)#nil then H1 | {AddSample T1 nil}
+      [] nil#(H2|T2) then H2 | {AddSample nil T2}
+      [] (H1|T1)#(H2|T2) then (H1+H2) | {AddSample T1 T2}
+      end
+   end
+
+   %entre -1.0 et 1.0
+   fun {Limit X}
+      if X > 1.0 then
+         1.0
+      elseif X < ~1.0 then
+         ~1.0
+      else
+         X
+      end
+   end
+
+   fun {LimitList Sample}
+      case Sample of
+         nil then nil
+      [] H|T then
+         {Limit H} | {LimitList T}
+      end
+   end   
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+% FONCTIONS
+%%%%%%%%%%%%%%%%%%%%%%%
    % Liste samples pour une note
    fun {NoteSample Note}
       case Note of
@@ -87,35 +134,64 @@ define
          end
       end
    end
+   
+   fun {MergeSample P2T Musics}
+      case Musics of
+         nil then
+            nil
+      [] (Factor#Music)|Rest then
+         Mix1 = {Mix P2T Music}
+         MixRest = {MergeSample P2T Rest}
 
-   % Mix principal
+         ScaledMix1 = {ScaleSample Factor Mix1}
+      in
+         {AddSample ScaledMix1 MixRest}
+      end
+   end
+
+   %Mix
    fun {Mix P2T Music}
       case Music of
          nil then
             nil
       [] H|T then
-         case H of
-            samples(S) then
-               {List.append S {Mix P2T T}}
-         [] partition(P) then
-               {List.append {PartitionSample {P2T P}} {Mix P2T T}}
-         [] _ then
-            {Mix P2T T}
-         end
+         Samples =
+            case H of
+               samples(S) then
+                  S
+            [] partition(P) then
+                  {PartitionSample {P2T P}}
+            [] wave(Song) then
+                  {Project2025.load CWD#Song}
+            [] merge(Music) then
+                  {MergeSample P2T Music}
+            [] _ then
+                  nil
+            end
+      in
+         {LimitList {List.append Samples {Mix P2T T}}}
       end
    end
+   
+
 
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %TEST
 
    P2 = [
-      note(name:c octave:4 sharp:true duration:1.0 instrument:none)
-      note(name:d octave:4 sharp:true duration:1.0 instrument:none)
-      note(name:e octave:4 sharp:true duration:1.0 instrument:none)
-      note(name:c octave:4 sharp:true duration:1.0 instrument:none)
-      note(name:c octave:4 sharp:true duration:1.0 instrument:none)
-      note(name:e octave:4 sharp:true duration:1.0 instrument:none)
-      note(name:e octave:4 sharp:true duration:1.0 instrument:none)
+      note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:e octave:4 sharp:false duration:2.0 instrument:none)
+      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:f octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:g octave:4 sharp:false duration:2.0 instrument:none)
+      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:f octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:g octave:4 sharp:false duration:2.0 instrument:none)
    ]
 
    fun {TmpP2T Partition}
