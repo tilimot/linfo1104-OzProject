@@ -126,6 +126,6 @@ define
    Sample = {Mix TmpP2T Musique}
 
    {System.show {Length Sample}}
-   {Project2025.load Sample}
+   {Project2025.run Mix TmpP2T Musique "output.wav" nil}
 
 end
