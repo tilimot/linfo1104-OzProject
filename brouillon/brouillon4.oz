@@ -51,14 +51,14 @@ fun{ApplyTransform P}
     [] stretch(...) then {HandleStretch P}
     [] drone(...) then {HandleDrone P}
     [] duration(...) then {HandleDuration P}
+    
     else
         P
     end
 end
 
 
-
-/*** Stretch Transform ***  
+/***************** Stretch Transform ***************** 
     Return a list of stretched extended note
  */
 
@@ -76,8 +76,7 @@ fun{Stretch P F}
 end
 
 
-
-/*** Drone Transform ***
+/*****************  Drone Transform ***************** 
     Return a list of droned extended note 
 */
 
@@ -94,11 +93,11 @@ fun{HandleDroneAux Note Amount Acc}
 end
 
 
-/*** Duration transform ***
+/*****************  Duration transform ***************** 
     Return a transposed Partition
 */
 
-/* */
+
 local Partition CurrentTime ExpectedTime Factor  in  
     fun{HandleDuration D}
         Partition=D.1
@@ -121,11 +120,26 @@ fun{CurrentTotalTime P Acc}
 end 
 
 
+/***************** Transposition transform *****************
+*/
+
 
 %%%%%%%%%%%%%%%%%%%%%%%% Flatten %%%%%%%%%%%%%%%%%%%%%%%%
 
+fun {Flatten Xs}
+    case Xs of nil then nil
+    [] X|Xr then
+       {Flatten X} | {Flatten Xr}
+    else Xs
+    end
+ end
+
+%%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
 
+fun {PartitionToTimedList Partition}
+    {Flatten {ApplyTransform {PartitionToExtended Partition}}}
+end
 
 
 
@@ -141,10 +155,7 @@ Interlude = [a a b g a stretch(factor:0.5 [b c5])
 
 Partition = [Tune End1 Tune End2 Interlude Tune End2]
 
-A=[a b7 c7]     
-Test=[ A stretch(factor:6.0 A) drone(note:b8 amount:7)]
+%A=[a b7 c7]     
+%Test=[ A stretch(factor:6.0 A) drone(note:b8 amount:7)]
 
-Extended = {PartitionToExtended Partition}
-M = duration(seconds:1000.0 Extended)
-ModifiedDuration = {HandleDuration M}
-{Browse {CurrentTotalTime ModifiedDuration 0.0}}
+{Browse {PartitionToTimedList Partition}}
