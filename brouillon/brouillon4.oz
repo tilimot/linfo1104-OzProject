@@ -125,20 +125,22 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% Flatten %%%%%%%%%%%%%%%%%%%%%%%%
-
+/* 
 fun {Flatten Xs}
     case Xs of nil then nil
     [] X|Xr then
        {Flatten X} | {Flatten Xr}
     else Xs
     end
- end
+end
+*/
 
 %%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
-
-fun {PartitionToTimedList Partition}
-    {Flatten {ApplyTransform {PartitionToExtended Partition}}}
+local Music in
+    fun {PartitionToTimedList Partition}
+        Music={Flatten {ApplyTransform {PartitionToExtended Partition}}}
+    end
 end
 
 
