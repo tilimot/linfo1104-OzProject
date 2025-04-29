@@ -11,13 +11,9 @@ define
    % Get the full path of the program
    CWD = {Atom.toString {OS.getCWD}}#"/"
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %%%%%%%%%%%%%%%%%%%%%%%
 % FONCTIONS UTILITAIRES
 %%%%%%%%%%%%%%%%%%%%%%%
-
-
 
    %x tous les échantillons par
    fun {ScaleSample Factor Samples}
@@ -58,37 +54,89 @@ define
 
 
 %%%%%%%%%%%%%%%%%%%%%%%
+% FILTRES
+%%%%%%%%%%%%%%%%%%%%%%%
+
+   %Repeat -> répéter musique amount fois
+   fun {Repeat amount Music}
+      if amount =< 0 then
+         nil
+      else
+         {List.append Music {Repeat amount-1 Music}}
+      end
+   end
+
+   %Loop -> répéter une musique jusqu'à une durée
+   fun {Loop duration Music}
+      Total = {FloatToInt duration * 44100.0}
+      fun {LoopCreate Acc}
+         Length = {Length Acc}
+      in
+         if Length >= Total then
+            % coupe
+            {Take Acc Total}
+         else
+            % ajout ala fin de Acc
+            {LoopCreate {List.append Acc Music}}
+         end
+      end
+   in
+      {LoopCreate nil}
+   end
+
+   %Clip -> echant. entre low/high
+   fun {Clip low high music}
+      case music of
+         nil then 
+            nil
+      [] H|T then
+         C = 
+            if H < low then 
+               low
+            elseif H > high then 
+               high
+            else 
+               H
+            end
+      in
+         C | {Clip low high T}
+      end
+   end
+
+   %
+
+%%%%%%%%%%%%%%%%%%%%%%%
 % FONCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%
    % Liste samples pour une note
    fun {NoteSample Note}
       case Note of
          note(name:Name octave:Octave sharp:Sharp duration:Duration instrument:_ ) then
-            % Position de base relative à A4
+            %conversion note -> octave
             NoteBase =
                case Name
                of a then 0.0 [] b then 2.0 [] c then ~9.0
                [] d then ~7.0 [] e then ~5.0 [] f then ~4.0 [] g then ~2.0
                end
             
-            % Ajustement pour dièse
+            %#
             SharpAdjust = if Sharp then 1.0 else 0.0 end
             
-            % Ajustement pour l'octave (attention ici Octave est un int)
+            %octave
             OctaveAdjust = (Octave - 4) * 12
             
-            % Hauteur totale
+            %
             H = NoteBase + SharpAdjust + {IntToFloat OctaveAdjust}
    
-            % Conversion hauteur en fréquence
+            %conversion
             Freq = {Pow 2.0 H/12.0} * 440.0
    
-            % Paramètres d'échantillonnage
+            %param
             SampleRate = 44100.0
             NSamples = {FloatToInt Duration * SampleRate}
             Pi = 3.141592653589793
    
-            % Création des samples
+            %créerr echant.
             fun {CreateSample I}
                if I >= NSamples then nil
                else
@@ -165,6 +213,18 @@ define
                   {Project2025.load CWD#Song}
             [] merge(Music) then
                   {MergeSample P2T Music}
+            [] repeat{quantity:Q Music=M} then
+               {Repeat Q P2T M}
+            [] loop{time:T Music=M} then
+               {Loop T {Mix P2T M}}
+            [] clip{low:L high:H music=M} then
+               {Clip L H {Mix P2T M}}
+            [] echo{delay:D decay:F repeat:R music:M} then
+               {Echo D F R {Mix P2T M}}
+            [] fade(start:S finish:F music:M) then
+               {Fade S F {Mix P2T M}}
+            [] cut(start:S finish:F music:M) then
+               {Cut S F {Mix P2T M}}
             [] _ then
                   nil
             end
