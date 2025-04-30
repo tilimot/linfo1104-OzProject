@@ -52,6 +52,16 @@ define
       end
    end   
 
+   fun {Take L N}
+      if N =< 0 orelse L == nil then
+         nil
+      else
+         case L of H|T then
+            H | {Take T N-1}
+         end
+      end
+   end   
+
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % FILTRES
@@ -213,18 +223,18 @@ define
                   {Project2025.load CWD#Song}
             [] merge(Music) then
                   {MergeSample P2T Music}
-            [] repeat{quantity:Q Music=M} then
-               {Repeat Q P2T M}
-            [] loop{time:T Music=M} then
-               {Loop T {Mix P2T M}}
-            [] clip{low:L high:H music=M} then
-               {Clip L H {Mix P2T M}}
-            [] echo{delay:D decay:F repeat:R music:M} then
-               {Echo D F R {Mix P2T M}}
+            [] repeat(amount:A music:M) then
+                  {Repeat A {Mix P2T M}}
+            [] loop(duration:D music:M) then
+                  {Loop D {Mix P2T M}}
+            [] clip(low:L high:H music:M) then
+                  {Clip L H {Mix P2T M}}
+            [] echo(delay:D decay:F repeat:R music:M) then
+                  nil
             [] fade(start:S finish:F music:M) then
-               {Fade S F {Mix P2T M}}
+                  nil
             [] cut(start:S finish:F music:M) then
-               {Cut S F {Mix P2T M}}
+                  nil
             [] _ then
                   nil
             end
@@ -238,30 +248,30 @@ define
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %TEST
 
-   P2 = [
-      note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:d octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:d octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:e octave:4 sharp:false duration:2.0 instrument:none)
-      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:f octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:g octave:4 sharp:false duration:2.0 instrument:none)
-      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:f octave:4 sharp:false duration:1.0 instrument:none)
-      note(name:g octave:4 sharp:false duration:2.0 instrument:none)
-   ]
+%    P2 = [
+%       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:e octave:4 sharp:false duration:2.0 instrument:none)
+%       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
+%       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
+%       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
+%    ]
 
-   fun {TmpP2T Partition}
-      Partition
-   end
+%    fun {TmpP2T Partition}
+%       Partition
+%    end
 
-   Musique = [partition(P2)]
-   Sample = {Mix TmpP2T Musique}
+%    Musique = [partition(P2)]
+%    Sample = {Mix TmpP2T Musique}
 
-   {System.show {Length Sample}}
-   {Project2025.run Mix TmpP2T Musique "output.wav" nil}
+%    {System.show {Length Sample}}
+%    {Project2025.run Mix TmpP2T Musique "output.wav" nil}
 
 end
