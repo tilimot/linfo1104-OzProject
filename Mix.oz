@@ -117,7 +117,23 @@ define
       end
    end
 
-   %
+   %echo
+   fun {Echo delay decay repeat music}
+      fun {EchoCreate I}
+         if I > repeat then nil
+         else
+            DelaySamples = {FloatToInt delay * 44100.0}
+            Scaled = {ScaleSample {Pow decay I} music}
+            Delayed = {List.append {Silence delay} Scaled}
+         in
+            Delayed | {EchoCreate I+1}
+         end
+      end
+      EchoList = {EchoCreate 1}
+   in
+      {FoldL EchoList music AddSample}
+   end
+   
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % FONCTIONS
@@ -238,8 +254,8 @@ define
                   {Loop D {Mix P2T M}}
             [] clip(low:L high:H music:M) then
                   {Clip L H {Mix P2T M}}
-            % [] echo(delay:D decay:F repeat:R music:M) then
-            %       nil
+            [] echo(delay:D decay:F repeat:R music:M) then
+                  {Echo D F R {Mix P2T M}}
             % [] fade(start:S finish:F music:M) then
             %       nil
             % [] cut(start:S finish:F music:M) then
