@@ -1,3 +1,7 @@
+% Auteurs: 
+% Moers Simon - 97272400
+% Butenda Babapu Timothée
+
 functor
 import
    Project2025
@@ -220,7 +224,12 @@ define
             [] partition(P) then
                   {PartitionSample {P2T P}}
             [] wave(Song) then
+               try
                   {Project2025.load CWD#Song}
+               catch _ then
+                  {System.showInfo "Introuvable: "#Song}
+                  nil
+               end
             [] merge(Music) then
                   {MergeSample P2T Music}
             [] repeat(amount:A music:M) then
@@ -229,12 +238,12 @@ define
                   {Loop D {Mix P2T M}}
             [] clip(low:L high:H music:M) then
                   {Clip L H {Mix P2T M}}
-            [] echo(delay:D decay:F repeat:R music:M) then
-                  nil
-            [] fade(start:S finish:F music:M) then
-                  nil
-            [] cut(start:S finish:F music:M) then
-                  nil
+            % [] echo(delay:D decay:F repeat:R music:M) then
+            %       nil
+            % [] fade(start:S finish:F music:M) then
+            %       nil
+            % [] cut(start:S finish:F music:M) then
+            %       nil
             [] _ then
                   nil
             end
