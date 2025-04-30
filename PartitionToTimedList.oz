@@ -77,6 +77,7 @@ define
         case P of nil then nil
         [] H|T then {Stretch H F}|{Stretch T F}
         [] note(...) then note(name:P.name octave:P.octave sharp:P.sharp duration:P.duration*F instrument:none)
+        [] silence(...) then silence(duration:P.duration*F)
         else
             {Stretch {ApplyTransform P} F} % Risk of StackOverflow. Maybe prefer to returns directly the element P
         end
@@ -104,27 +105,22 @@ define
         Return a transposed Partition
     */
 
-
-    local Partition CurrentTime ExpectedTime Factor  in  
-        fun{HandleDuration D}
-            Partition=D.1
-            CurrentTime={CurrentTotalTime Partition 0.0}
-            ExpectedTime=D.seconds
-            Factor=ExpectedTime/CurrentTime
-            {Stretch Partition Factor }
-        end
-    end 
+    fun{HandleDuration D}
+        %Partition -> D.1
+        %Factor-> ExpectedTime/CurrentTime
+        {Stretch D.1 D.seconds/{CurrentTotalTime D.1 0.0}}
+    end
 
 
     fun{CurrentTotalTime P Acc}
-        case P of nil then Acc
-        [] H|T then 
-            case H of note(...) then {CurrentTotalTime T Acc+H.duration}
-            else                                                                    %                           _         _   
-                {CurrentTotalTime T Acc+{CurrentTotalTime {ApplyTransform H} 0.0}} % not so recursive terminale  \_(°-°)_/
-            end
+        case P of nil then Acc                                                          %          _         _ 
+        [] H|T then {CurrentTotalTime T Acc+{CurrentTotalTime H 0.0}} % not so recursive terminale  \_(°-°)_/
+        [] note(...) then Acc+P.duration
+        [] silence(...) then Acc+P.duration
+        else
+            Acc+{CurrentTotalTime {ApplyTransform P} 0.0}                                                            
         end
-    end 
+    end    
 
 
     /***************** Transposition transform *****************
@@ -133,6 +129,7 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
     fun {PartitionToTimedList Partition}
+
         {Flatten {ApplyTransform {PartitionToExtended Partition}}}
     end
 
