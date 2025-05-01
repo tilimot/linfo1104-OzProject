@@ -1,11 +1,4 @@
-functor
-import
-Project2025
-System
-Property
-export 
-partitionToTimedList: PartitionToTimedList
-define
+declare
 
     %%%%%%%%%%%%%%%%%%%%%%%% Extend Partition %%%%%%%%%%%%%%%%%%%%%%%%
     /*Funcs to transform each note into extended note */
@@ -35,6 +28,8 @@ define
 
     % Run trough the given Partition and transform each notes into extended note
     fun{PartitionToExtended P}
+    {System.show 'Extend process: '}
+    {System.show P}
         case P of nil then nil
         [] H|T then {PartitionToExtended H}| {PartitionToExtended T}
         []stretch(...) then stretch(factor:P.factor {PartitionToExtended P.1})
@@ -77,7 +72,6 @@ define
         case P of nil then nil
         [] H|T then {Stretch H F}|{Stretch T F}
         [] note(...) then note(name:P.name octave:P.octave sharp:P.sharp duration:P.duration*F instrument:none)
-        [] silence(...) then silence(duration:P.duration*F)
         else
             {Stretch {ApplyTransform P} F} % Risk of StackOverflow. Maybe prefer to returns directly the element P
         end
@@ -105,22 +99,27 @@ define
         Return a transposed Partition
     */
 
-    fun{HandleDuration D}
-        %Partition -> D.1
-        %Factor-> ExpectedTime/CurrentTime
-        {Stretch D.1 D.seconds/{CurrentTotalTime D.1 0.0}}
-    end
+
+    local Partition CurrentTime ExpectedTime Factor  in  
+        fun{HandleDuration D}
+            Partition=D.1
+            CurrentTime={CurrentTotalTime Partition 0.0}
+            ExpectedTime=D.seconds
+            Factor=ExpectedTime/CurrentTime
+            {Stretch Partition Factor }
+        end
+    end 
 
 
     fun{CurrentTotalTime P Acc}
-        case P of nil then Acc                                                          %          _         _ 
-        [] H|T then {CurrentTotalTime T Acc+{CurrentTotalTime H 0.0}} % not so recursive terminale  \_(°-°)_/
-        [] note(...) then Acc+P.duration
-        [] silence(...) then Acc+P.duration
-        else
-            Acc+{CurrentTotalTime {ApplyTransform P} 0.0}                                                            
+        case P of nil then Acc
+        [] H|T then 
+            case H of note(...) then {CurrentTotalTime T Acc+H.duration}
+            else                                                                    %                           _         _   
+                {CurrentTotalTime T Acc+{CurrentTotalTime {ApplyTransform H} 0.0}} % not so recursive terminale  \_(°-°)_/
+            end
         end
-    end    
+    end 
 
 
     /***************** Transposition transform *****************
@@ -129,9 +128,28 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
     fun {PartitionToTimedList Partition}
-
+        {System.show 'Begin of P2T'}
+        {System.show Partition}
         {Flatten {ApplyTransform {PartitionToExtended Partition}}}
     end
-
-
 end
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%% Manual Tests %%%%%%%%%%%%%%%%%%%%%%%%
+
+/* 
+Tune = [b b c5 d5 d5 c5 b a g g a b]
+End1 = [stretch(factor:1.5 [b]) stretch(factor:0.5 [a]) stretch(factor:2.0 [a])]
+End2 = [stretch(factor:1.5 [a]) stretch(factor:0.5 [g]) stretch(factor:2.0 [g])]
+Interlude = [a a b g a stretch(factor:0.5 [b c5])
+                b g a stretch(factor:0.5 [b c5])
+            b a g a stretch(factor:2.0 [d]) ]
+
+Partition = [Tune End1 Tune End2 Interlude Tune End2]
+*/
+%A=[a b7 c7]     
+%Test=[ A stretch(factor:6.0 A) drone(note:b8 amount:7)]
+
+{Browse {PartitionToTimedList Partition}}
