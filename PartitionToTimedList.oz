@@ -130,7 +130,7 @@ define
 
     fun {PartitionToTimedList Partition}
 
-        {Flatten {ApplyTransform {PartitionToExtended Partition}}}
+        [partition({Flatten {ApplyTransform {PartitionToExtended Partition}}})]
     end
 
 

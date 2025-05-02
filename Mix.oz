@@ -124,7 +124,7 @@ define
          else
             DelaySamples = {FloatToInt delay * 44100.0}
             Scaled = {ScaleSample {Pow decay I} music}
-            Delayed = {List.append {Silence delay} Scaled}
+            Delayed = {List.append {SilenceSample delay} Scaled}
          in
             Delayed | {EchoCreate I+1}
          end
@@ -134,6 +134,23 @@ define
       {FoldL EchoList music AddSample}
    end
    
+
+   fun {Fade F}
+      % F is fade(...)
+      if {Value.hasFeature Fade start} then 
+         skip
+      end
+      if {Value.hasFeature Fade finish} then
+         skip
+      end
+   end
+
+   fun {handleFadeStart Start Music}
+      
+   end
+
+
+         
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % FONCTIONS
@@ -238,7 +255,9 @@ define
                samples(S) then
                   S
             [] partition(P) then
-                  {PartitionSample {P2T P}}
+                  %{System.show {PartitionSample {P2T P}}}
+                  Mix{samples({PartitionSample {P2T P}})}
+                  
             [] wave(Song) then
                try
                   {Project2025.load CWD#Song}
