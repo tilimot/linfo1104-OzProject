@@ -49,10 +49,12 @@ define
    end
 
    fun {LimitList Sample}
-      case Sample of
-         nil then nil
+      case Sample of nil then 
+         nil
       [] H|T then
-         {Limit H} | {LimitList T}
+         {LimitList H} | {LimitList T}
+      else
+         {Limit Sample}
       end
    end   
 
@@ -99,21 +101,21 @@ define
    end
 
    %Clip -> echant. entre low/high
-   fun {Clip low high music}
-      case music of
+   fun {Clip Low High Music}
+      case Music of
          nil then 
             nil
       [] H|T then
          C = 
             if H < low then 
-               low
+               Low
             elseif H > high then 
-               high
+               High
             else 
                H
             end
       in
-         C | {Clip low high T}
+         C | {Clip Low High T}
       end
    end
 
@@ -134,20 +136,6 @@ define
       {FoldL EchoList music AddSample}
    end
    
-
-   fun {Fade F}
-      % F is fade(...)
-      if {Value.hasFeature Fade start} then 
-         skip
-      end
-      if {Value.hasFeature Fade finish} then
-         skip
-      end
-   end
-
-   fun {handleFadeStart Start Music}
-      
-   end
 
 
          
@@ -215,20 +203,17 @@ define
 
    % Partition étendue -> Liste d'échantillons
    fun {PartitionSample Part}
-      case Part of
-         nil then
+      case Part of nil then
             nil
-      [] H|T then
-         case H of
-            note(...) then
-               {List.append {NoteSample H} {PartitionSample T}}
+         [] H|T then 
+            {List.append {PartitionSample H} {PartitionSample T}} 
+         []note(...) then 
+            {NoteSample Part}
          [] silence(duration:_) then
-               {List.append {SilenceSample H} {PartitionSample T}}
-         [] _ then
-               {PartitionSample T}
-         end
+            {SilenceSample Part}
       end
    end
+
    
    fun {MergeSample P2T Musics}
       case Musics of
@@ -244,78 +229,87 @@ define
       end
    end
 
-   %Mix
-   fun {Mix P2T Music}
-      case Music of
-         nil then
+   fun {MixAux P2T Music}
+      case Music of nil then
+         nil
+      [] H|T then {MixAux P2T H}|{MixAux P2T T}
+
+      []samples(S) then
+                  Music
+      [] partition(P) then
+            {MixAux P2T samples({PartitionSample {P2T P}})}
+            
+      [] wave(Song) then
+         try
+            {Project2025.load CWD#Song}
+         catch _ then
+            {System.showInfo "Introuvable: "#Song}
             nil
-      [] H|T then
-         Samples =
-            case H of
-               samples(S) then
-                  S
-            [] partition(P) then
-                  %{System.show {PartitionSample {P2T P}}}
-                  Mix{samples({PartitionSample {P2T P}})}
-                  
-            [] wave(Song) then
-               try
-                  {Project2025.load CWD#Song}
-               catch _ then
-                  {System.showInfo "Introuvable: "#Song}
-                  nil
-               end
-            [] merge(Music) then
-                  {MergeSample P2T Music}
-            [] repeat(amount:A music:M) then
-                  {Repeat A {Mix P2T M}}
-            [] loop(duration:D music:M) then
-                  {Loop D {Mix P2T M}}
-            [] clip(low:L high:H music:M) then
-                  {Clip L H {Mix P2T M}}
-            [] echo(delay:D decay:F repeat:R music:M) then
-                  {Echo D F R {Mix P2T M}}
-            % [] fade(start:S finish:F music:M) then
-            %       nil
-            % [] cut(start:S finish:F music:M) then
-            %       nil
-            [] _ then
-                  nil
-            end
-      in
-         {LimitList {List.append Samples {Mix P2T T}}}
+         end
+      [] merge(Music) then
+            {MergeSample P2T Music}
+      [] repeat(amount:A music:M) then
+            {Repeat A {MixAux P2T M}}
+      [] loop(duration:D music:M) then
+            {Loop D {MixAux P2T M}}
+      [] clip(low:L high:H music:M) then
+            {Clip L H {MixAux P2T M}}
+      [] echo(delay:D decay:F repeat:R music:M) then
+            {Echo D F R {MixAux P2T M}}
+      % [] fade(start:S finish:F music:M) then
+      %       nil
+      % [] cut(start:S finish:F music:M) then
+      %       nmerge(〈musicsil
       end
-   end
+   end 
+
    
 
 
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   %TEST
 
-%    P2 = [
-%       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:e octave:4 sharp:false duration:2.0 instrument:none)
-%       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
-%       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
-%       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
-%    ]
+   %Mix
+   fun {Mix P2T Music}
+         Samples = {MixAux P2T Music}.1
+         {System.show Samples}
+      in
+         %{LimitList Samples.1}
+         %{Property.put print print(width:100000)}
+         %{Property.put print print(depth:100000)}
+         
+         Samples.1
+         
+   end
+   
+   
 
-%    fun {TmpP2T Partition}
-%       Partition
-%    end
 
-%    Musique = [partition(P2)]
-%    Sample = {Mix TmpP2T Musique}
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      %TEST
 
-%    {System.show {Length Sample}}
-%    {Project2025.run Mix TmpP2T Musique "output.wav" nil}
+   %    P2 = [
+   %       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:e octave:4 sharp:false duration:2.0 instrument:none)
+   %       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
+   %       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
+   %       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
+   %    ]
+
+   %    fun {TmpP2T Partition}
+   %       Partition
+   %    end
+
+   %    Musique = [partition(P2)]
+   %    Sample = {Mix TmpP2T Musique}
+
+   %    {System.show {Length Sample}}
+   %    {Project2025.run Mix TmpP2T Musique "output.wav" nil}
 
 end

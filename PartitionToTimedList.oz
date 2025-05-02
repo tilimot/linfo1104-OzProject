@@ -129,8 +129,9 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
     fun {PartitionToTimedList Partition}
-
-        [partition({Flatten {ApplyTransform {PartitionToExtended Partition}}})]
+        List={Flatten {ApplyTransform {PartitionToExtended Partition}}}
+    in 
+        List
     end
 
 
