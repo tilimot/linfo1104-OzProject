@@ -10,6 +10,7 @@ import
    Property
 export 
    mix: Mix
+   partitionSample: PartitionSample
 define
 
    % Get the full path of the program
@@ -66,6 +67,15 @@ define
       end
    end   
 
+   fun {Drop L N}
+      if N =< 0 orelse L == nil then
+         L
+      else
+         case L of H|T then
+            {Drop T N-1}
+         end
+      end
+   end
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % FILTRES
@@ -118,22 +128,66 @@ define
    end
 
    %echo
-   fun {Echo delay decay repeat music}
-      fun {EchoCreate I}
-         if I > repeat then nil
+   fun {Echo Delay Decay Repeat Music}
+      fun {CreateEcho I}
+         if I > Repeat then nil
          else
-            DelaySamples = {FloatToInt delay * 44100.0}
-            Scaled = {ScaleSample {Pow decay I} music}
-            Delayed = {List.append {Silence delay} Scaled}
+            DelaySamples = {FloatToInt Delay * 44100.0}
+            Scaled = {ScaleSample {Pow Decay I} Music}
+            Delayed = {List.append {SilenceSample silence(duration:Delay)} Scaled}
          in
-            Delayed | {EchoCreate I+1}
+            Delayed | {CreateEcho I+1}
          end
       end
-      EchoList = {EchoCreate 1}
+      EchoList = {CreateEcho 1}
    in
-      {FoldL EchoList music AddSample}
+      {FoldL EchoList Music AddSample}
    end
    
+
+   fun {Fade Start Finish Music}
+      TotalSamples = {Length Music}
+      StartSamples = {FloatToInt Start * 44100.0}
+      FinishSamples = {FloatToInt Finish * 44100.0}
+   
+      fun {ApplyFadeIn Music Acc}
+         case Music of
+            nil then nil
+         [] H|T then
+            Factor = {Min 1.0 ({IntToFloat Acc} / {IntToFloat StartSamples})}
+         in
+            (H * Factor) | {ApplyFadeIn T Acc+1}
+         end
+      end
+   
+      fun {ApplyFadeOut Music Acc}
+         case Music of
+            nil then nil
+         [] H|T then
+            Factor = {Max 0.0 (1.0 - ({IntToFloat Acc} / {IntToFloat FinishSamples}))}
+         in
+            (H * Factor) | {ApplyFadeOut T Acc+1}
+         end
+      end
+   
+      MusicWithFadeIn = {ApplyFadeIn Music 1}
+      MusicWithFadeOut = {ApplyFadeOut MusicWithFadeIn (TotalSamples - FinishSamples + 1)}
+   in
+      MusicWithFadeOut
+   end
+
+
+   fun {Cut Start Finish Music}
+      StartSamples = {FloatToInt Start * 44100.0}
+      FinishSamples = {FloatToInt Finish * 44100.0}
+      TotalSamples = {Length Music}
+   
+      PaddedMusic = {List.append {SilenceSample silence(duration:Start)} Music}
+      PaddedMusic = {List.append PaddedMusic {SilenceSample silence(duration:(Finish - {IntToFloat TotalSamples / 44100.0}))}}
+   in
+      {Take {Drop PaddedMusic StartSamples} (FinishSamples - StartSamples)}
+   end
+         
 
 %%%%%%%%%%%%%%%%%%%%%%%
 % FONCTIONS
@@ -238,7 +292,7 @@ define
                samples(S) then
                   S
             [] partition(P) then
-                  {PartitionSample {P2T P}}
+                  {Mix P2T [samples({PartitionSample {P2T P}})]}
             [] wave(Song) then
                try
                   {Project2025.load CWD#Song}
@@ -256,12 +310,12 @@ define
                   {Clip L H {Mix P2T M}}
             [] echo(delay:D decay:F repeat:R music:M) then
                   {Echo D F R {Mix P2T M}}
-            % [] fade(start:S finish:F music:M) then
-            %       nil
-            % [] cut(start:S finish:F music:M) then
-            %       nil
-            [] _ then
-                  nil
+            [] fade(start:S finish:F music:M) then
+                  {Fade S F {Mix P2T M}}
+            [] cut(start:S finish:F music:M) then
+                  {Cut S F {Mix P2T M}}
+            else
+                  nil % Cas par défaut pour éviter l'erreur
             end
       in
          {LimitList {List.append Samples {Mix P2T T}}}
