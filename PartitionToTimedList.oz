@@ -214,7 +214,6 @@ define
     %%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
     fun {PartitionToTimedList Partition}
-
         {Flatten {ApplyTransform {PartitionToExtended Partition}}}
     end
 
