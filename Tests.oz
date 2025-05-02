@@ -178,7 +178,16 @@ define
    end
 
    proc {TestTranspose P2T}
-      skip
+      P1 = [transpose(semitones:15 [b c5 d9 c5 g])]
+      E1 = [
+         note(name:d octave:6 sharp:false duration:1.0 instrument:none)
+         note(name:d octave:6 sharp:true duration:1.0 instrument:none)
+         note(name:g octave:10 sharp:true duration:1.0 instrument:none)
+         note(name:d octave:6 sharp:true duration:1.0 instrument:none)
+         note(name:c octave:6 sharp:true duration:1.0 instrument:none)
+      ]
+   in 
+      {AssertEquals {P2T P1} E1 'TestTranspose'}
    end
 
    proc {TestP2TChaining P2T}

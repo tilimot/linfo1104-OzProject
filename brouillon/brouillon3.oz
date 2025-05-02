@@ -12,6 +12,8 @@ define
         [] H|T then {Transpose Semitones H} | {Transpose Semitones T}
         [] silence(...) then Note
         [] note(...) then {TransposeNote Semitones Note}
+        else
+            {Transpose Semitones {ApplyTransform Note}}
         end
     end
 
@@ -50,7 +52,7 @@ define
         end
     end
 
-    L = transpose(semitones:2 note(name:a octave:4 sharp:true duration:1.0 instrument:none))
+    L = transpose(semitones:2 [b b c5 d5 d5 c5 b a g g a b])
     {System.show {HandleTranspose L}}
 end
 
