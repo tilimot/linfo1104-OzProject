@@ -34,35 +34,48 @@ define
 
 
     % Run trough the given Partition and transform each notes into extended note
-    fun{PartitionToExtended P}
-        case P of nil then nil
-        [] H|T then {PartitionToExtended H}| {PartitionToExtended T}
-        []stretch(...) then stretch(factor:P.factor {PartitionToExtended P.1})
-        []duration(...) then duration(seconds:P.seconds {PartitionToExtended P.1})
-        []drone(...) then drone(note:{PartitionToExtended P.note} amount:P.amount)
-        []mute(...) then {PartitionToExtended drone(note:silence amount:P.amount)} % Mute direclty handled --> Transform mute into drone with extended notes
-        []transpose(...) then transpose(semitones:P.semitones {PartitionToExtended P.1})
+    fun {PartitionToExtended P}
+        case P of
+           nil then nil
+        [] H|T then {PartitionToExtended H} | {PartitionToExtended T}
+        [] stretch(...) then stretch(factor:P.factor {PartitionToExtended P.1})
+        [] duration(...) then duration(seconds:P.seconds {PartitionToExtended P.1})
+        [] drone(...) then drone(note:{PartitionToExtended P.note} amount:P.amount)
+        [] mute(...) then {PartitionToExtended drone(note:silence amount:P.amount)}
+        [] transpose(...) then transpose(semitones:P.semitones {PartitionToExtended P.1})
         else
-            {NoteToExtended P}
+           if {IsList P} then
+              {HandleChord P}
+           else
+              {NoteToExtended P}
+           end
         end
-    end 
+     end
+     
 
 
     %%%%%%%%%%%%%%%%%%%%%%%% Apply transforms %%%%%%%%%%%%%%%%%%%%%%%%
 
     /* Call corresponding func to transform required */
-
-    fun{ApplyTransform P}
-        case P of nil then nil
+    fun {ApplyTransform P}
+        case P of
+           nil then nil
         [] H|T then {ApplyTransform H} | {ApplyTransform T}
         [] stretch(...) then {HandleStretch P}
         [] drone(...) then {HandleDrone P}
         [] duration(...) then {HandleDuration P}
         [] transpose(...) then {HandleTranspose P}
+        [] note(...) then P
+        [] silence(...) then P
         else
-            P
+           if {IsList P} then
+              {Map P ApplyTransform}
+           else
+              P
+           end
         end
-    end
+     end
+     
 
 
     /***************** Stretch Transform ***************** 
@@ -122,6 +135,16 @@ define
         end
     end    
 
+    /***************** Chord transform *****************
+    */
+    fun {HandleChord Chord}
+        case Chord of
+            nil then nil
+        [] H|T then
+            {NoteToExtended H} | {HandleChord T}
+        end
+    end
+
 
     /***************** Transposition transform *****************
     */
@@ -172,7 +195,6 @@ define
             note(name:NewName octave:NewOctave sharp:Sharp duration:Note.duration instrument:Note.instrument)
         end
     end
-
 
 
     /*

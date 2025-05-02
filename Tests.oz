@@ -79,8 +79,23 @@ define
    end
 
    proc {TestChords P2T}
-      skip
+      P1 = [[c e g] silence [a#4 d#5]]
+      E1 = [
+         [
+            note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+            note(name:g octave:4 sharp:false duration:1.0 instrument:none)
+         ]
+         silence(duration:1.0)
+         [
+            note(name:a octave:4 sharp:true duration:1.0 instrument:none)
+            note(name:d octave:5 sharp:true duration:1.0 instrument:none)
+         ]
+      ]
+   in
+      {AssertEquals {P2T P1} E1 'TestChords'}
    end
+   
 
    proc {TestIdentity P2T}
       % test that extended notes and chord go from input to output unchanged
