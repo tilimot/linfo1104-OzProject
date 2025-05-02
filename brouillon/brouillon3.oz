@@ -1,60 +1,56 @@
-declare
-/*Extend each note */
-% Translate a note to the extended notation.
-fun {NoteToExtended Note}
-    case Note
-    of nil then nil 
-    [] note(...) then Note
-    [] silence(duration: _) then Note
-    [] silence then silence(duration:1.0)
-    [] Name#Octave then note(name:Name octave:Octave sharp:true duration:1.0 instrument:none)
-    [] Atom then
-        case {AtomToString Atom}
-        of [_] then
-            note(name:Atom octave:4 sharp:false duration:1.0 instrument:none)
-        [] [N O] then
-            note(name:{StringToAtom [N]}
-                octave:{StringToInt [O]}
-                sharp:false
-                duration:1.0
-                instrument: none)
+functor
+import
+    System 
+define
+    fun{HandleTranspose T}
+        {Transpose T.semitones T.1 }
+        
+    end
+
+    fun{Transpose Semitones Note}
+        case Note of nil then nil 
+        [] H|T then {Transpose Semitones H} | {Transpose Semitones T}
+        [] silence(...) then Note
+        [] note(...) then {TransposeNote Semitones Note}
         end
     end
-end
 
-
-% Translate Chord into Extended notation
-fun {ChordToExtended Chord}
-    case Chord of H|T then 
-        case H of C|N then {ChordToExtended H}|{ChordToExtended T}
-        else
-            {NoteToExtended H}|{ChordToExtended T}
+    local Index NewIndex NewOctave NewName Sharp NoteToPos PosToNote in
+        fun {TransposeNote Semitones Note}
+            
+            NoteToPos = noteIndex(c:0 d:2 e:4 f:5 g:7 a:9 b:11)
+            PosToNote = indexNote(
+                0:note(name:c sharp:false)
+                1:note(name:c sharp:true)
+                2:note(name:d sharp:false)
+                3:note(name:d sharp:true)
+                4:note(name:e sharp:false)
+                5:note(name:f sharp:false)
+                6:note(name:f sharp:true)
+                7:note(name:g sharp:false)
+                8:note(name:g sharp:true)
+                9:note(name:a sharp:false)
+                10:note(name:a sharp:true)
+                11:note(name:b sharp:false)
+            )
+            
+            Index = if Note.sharp == true then
+                        Index = NoteToPos.(Note.name)+1
+                    else
+                        Index = NoteToPos.(Note.name)
+                    end
+            
+            NewIndex = (Index + Semitones) mod 12
+            {System.show Index}
+            {System.show NewIndex}
+            NewOctave = Note.octave + ((Index + Semitones) div 12)
+            NewName = PosToNote.NewIndex.name
+            Sharp = PosToNote.NewIndex.sharp
+            note(name:NewName octave:NewOctave sharp:Sharp duration:Note.duration instrument:Note.instrument)
         end
-    else
-        Chord
     end
+
+    L = transpose(semitones:2 note(name:a octave:4 sharp:true duration:1.0 instrument:none))
+    {System.show {HandleTranspose L}}
 end
 
-
-fun {PartitionToExtended P}
-    case P of nil then nil
-    [] H|T then 
-        case H of C|N then {ChordToExtended H}|{PartitionToExtended T}
-        [] stretch(...) then stretch(factor:H.factor {PartitionToExtended H.1})|{PartitionToExtended T}
-        else
-            {NoteToExtended H}| {PartitionToExtended T}
-        end
-    end
-end
-
-
-Tune = [b b c5 d5 d5 c5 b a g g a b]
-End1 = [stretch(factor:1.5 [b]) stretch(factor:0.5 [a]) stretch(factor:2.0 [a])]
-End2 = [stretch(factor:1.5 [a]) stretch(factor:0.5 [g]) stretch(factor:2.0 [g])]
-Interlude = [a a b g a stretch(factor:0.5 [b c5])
-                b g a stretch(factor:0.5 [b c5])
-            b a g a stretch(factor:2.0 [d]) ]
-
-% This is not a music.
-Partition = [Tune End1 Tune End2 Interlude Tune End2]
-{Browse {PartitionToExtended [End1]}}
