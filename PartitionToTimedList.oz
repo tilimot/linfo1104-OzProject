@@ -36,7 +36,6 @@ define
     fun {ChordToExtended Chord}
         chord({Map Chord NoteToExtended})
     end
-  
 
 
     % Run trough the given Partition and transform each notes into extended note
@@ -75,14 +74,9 @@ define
         [] transpose(...) then {HandleTranspose P}
         [] note(...) then P
         [] silence(...) then P
-        else
-           if {IsList P} then
-              {Map P ApplyTransform}
-           else
-              P
-           end
+        [] chord(...) then P 
         end
-     end
+    end
      
 
 
@@ -98,6 +92,7 @@ define
         case P of nil then nil
         [] H|T then {Stretch H F}|{Stretch T F}
         [] note(...) then note(name:P.name octave:P.octave sharp:P.sharp duration:P.duration*F instrument:none)
+        [] chord(Chord) then chord({Stretch Chord F})
         [] silence(...) then silence(duration:P.duration*F)
         else
             {Stretch {ApplyTransform P} F} % Risk of StackOverflow. Maybe prefer to returns directly the element P
@@ -130,28 +125,19 @@ define
         %Partition -> D.1
         %Factor-> ExpectedTime/CurrentTime
         {Stretch D.1 D.seconds/{CurrentTotalTime D.1 0.0}}
-    end
+    end  
 
 
     fun{CurrentTotalTime P Acc}
         case P of nil then Acc                                                          %          _         _ 
         [] H|T then {CurrentTotalTime T Acc+{CurrentTotalTime H 0.0}} % not so recursive terminale  \_(°-°)_/
         [] note(...) then Acc+P.duration
+        [] chord(Chord) then Acc + {CurrentTotalTime Chord 0.0} 
         [] silence(...) then Acc+P.duration
         else
             Acc+{CurrentTotalTime {ApplyTransform P} 0.0}                                                            
         end
     end    
-
-    /***************** Chord transform *****************
-    */
-    fun {HandleChord Chord}
-        case Chord of
-            nil then nil
-        [] H|T then
-            {NoteToExtended H} | {HandleChord T}
-        end
-    end
 
 
     /***************** Transposition transform *****************
@@ -166,6 +152,7 @@ define
         [] H|T then {Transpose Semitones H} | {Transpose Semitones T}
         [] silence(...) then Note
         [] note(...) then {TransposeNote Semitones Note}
+        [] chord(Chord) then {TransposeChord Semitones Chord}
         else
             {Transpose Semitones {ApplyTransform Note}}
         end
@@ -205,6 +192,16 @@ define
     end
 
 
+    fun {TransposeChord Semitones Chord}
+        case Chord of nil then nil
+        [] chord(Chord) then 
+            chord({TransposeChord Semitones Chord})
+        [] H|T then 
+            {TransposeNote Semitones H} | {TransposeChord Semitones T}
+        end
+    end
+
+
     /*
     local Index NewIndex NewOctave NewName Sharp NoteToPos PosToNote in
         fun {TransposeNote Semitones Note}
@@ -240,13 +237,25 @@ define
     end
     */
 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ChordToList %%%%%%%%%%%%%%%%%%%%%%%%
+
+    fun {ChordToList Partition}
+        case Partition of nil then nil
+        [] H|T then
+            case H of chord(Chord) then 
+                Chord | {ChordToList T}
+            else
+                H | {ChordToList T}
+            end
+        end
+    end
+
 
     %%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
     fun {PartitionToTimedList Partition}
 
-        %{Flatten {ApplyTransform {PartitionToExtended Partition}}}
-        {ApplyTransform {PartitionToExtended Partition}}
+        {ChordToList {Flatten {ApplyTransform {PartitionToExtended Partition}}}}
     end
 
 
