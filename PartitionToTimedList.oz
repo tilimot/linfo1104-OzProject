@@ -152,7 +152,7 @@ define
         [] H|T then {Transpose Semitones H} | {Transpose Semitones T}
         [] silence(...) then Note
         [] note(...) then {TransposeNote Semitones Note}
-        [] chord(Chord) then {TransposeChord Semitones Chord}
+        [] chord(...) then {TransposeChord Semitones Note}
         else
             {Transpose Semitones {ApplyTransform Note}}
         end
@@ -194,7 +194,7 @@ define
 
     fun {TransposeChord Semitones Chord}
         case Chord of nil then nil
-        [] chord(Chord) then 
+        [] chord(Chord) then {System.show 'here'}
             chord({TransposeChord Semitones Chord})
         [] H|T then 
             {TransposeNote Semitones H} | {TransposeChord Semitones T}
