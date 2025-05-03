@@ -32,25 +32,33 @@ define
         end
     end
 
+    % Extend Chords and store it into a record
+    fun {ChordToExtended Chord}
+        chord({Map Chord NoteToExtended})
+    end
+  
+
 
     % Run trough the given Partition and transform each notes into extended note
     fun {PartitionToExtended P}
         case P of
            nil then nil
-        [] H|T then {PartitionToExtended H} | {PartitionToExtended T}
+        [] H|T then 
+            if {IsList H} then 
+                {ChordToExtended H} | {PartitionToExtended T}
+            else 
+                {PartitionToExtended H} | {PartitionToExtended T}
+            end
         [] stretch(...) then stretch(factor:P.factor {PartitionToExtended P.1})
         [] duration(...) then duration(seconds:P.seconds {PartitionToExtended P.1})
         [] drone(...) then drone(note:{PartitionToExtended P.note} amount:P.amount)
         [] mute(...) then {PartitionToExtended drone(note:silence amount:P.amount)}
         [] transpose(...) then transpose(semitones:P.semitones {PartitionToExtended P.1})
         else
-           if {IsList P} then
-              {HandleChord P}
-           else
-              {NoteToExtended P}
-           end
+            {NoteToExtended P}
         end
-     end
+    end
+    
      
 
 
@@ -237,7 +245,8 @@ define
 
     fun {PartitionToTimedList Partition}
 
-        {Flatten {ApplyTransform {PartitionToExtended Partition}}}
+        %{Flatten {ApplyTransform {PartitionToExtended Partition}}}
+        {ApplyTransform {PartitionToExtended Partition}}
     end
 
 
