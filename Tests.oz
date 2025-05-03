@@ -163,6 +163,7 @@ define
          note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
 
+         % Repetition 2
          note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
          note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
          note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
@@ -193,13 +194,17 @@ define
    end
 
    proc {TestTranspose P2T}
-      P1 = [transpose(semitones:15 [b c5 d9 c5 g])]
+      P1 = [transpose(semitones:15 [b c#5 d9]) transpose(semitones:0 [b c#5 d9])]
       E1 = [
-         note(name:d octave:6 sharp:false duration:1.0 instrument:none)
-         note(name:d octave:6 sharp:true duration:1.0 instrument:none)
-         note(name:g octave:10 sharp:true duration:1.0 instrument:none)
-         note(name:d octave:6 sharp:true duration:1.0 instrument:none)
-         note(name:c octave:6 sharp:true duration:1.0 instrument:none)
+      % Transpose n°1: transpose > 11
+      note(duration:1.0 instrument:none name:d octave:6 sharp:false) 
+      note(duration:1.0 instrument:none name:e octave:6 sharp:false) 
+      note(duration:1.0 instrument:none name:f octave:10 sharp:false)
+      
+      % Transpose n°2: transpose = 0
+      note(duration:1.0 instrument:none name:b octave:4 sharp:false)
+      note(duration:1.0 instrument:none name:c octave:5 sharp:true)
+      note(duration:1.0 instrument:none name:d octave:9 sharp:false)
       ]
    in 
       {AssertEquals {P2T P1} E1 'TestTranspose'}
