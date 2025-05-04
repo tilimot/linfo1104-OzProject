@@ -83,8 +83,8 @@ define
    end
 
    %Loop -> répéter une musique jusqu'à une durée
-   fun {Loop duration Music}
-      Total = {FloatToInt duration * 44100.0}
+   fun {Loop Duration Music}
+      Total = {FloatToInt Duration * 44100.0}
       fun {LoopCreate Acc}
          Length = {Length Acc}
       in
