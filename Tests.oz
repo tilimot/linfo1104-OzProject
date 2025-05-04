@@ -210,11 +210,17 @@ define
       P1 = [ c mute(amount:3) a mute(amount:1) c]
       E1 = [
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+
+         %Mute n°1
          silence(duration:1.0)
          silence(duration:1.0)
          silence(duration:1.0)
+
          note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+
+         % Mute n°2
          silence(duration:1.0)
+         
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
       ] 
    in 
@@ -288,6 +294,7 @@ define
 
       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
 
+      % Empty chords representation
       silence(duration:0.0)
       ]
    in 
