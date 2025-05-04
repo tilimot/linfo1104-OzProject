@@ -9,7 +9,7 @@ local
 
    % This is not a music.
    Partition = {Flatten [Tune End1 Tune End2 Interlude Tune End2]}
-in
+ in
    % This is a music :)
    [partition(Partition)]
 end

@@ -44,13 +44,17 @@ define
            nil then nil
         [] H|T then 
             if {IsList H} then 
-                {ChordToExtended H} | {PartitionToExtended T}
+                if H==[nil] then 
+                    silence(duration:0.0)|{PartitionToExtended T}
+                else 
+                    {ChordToExtended H} | {PartitionToExtended T}
+                end
             else 
                 {PartitionToExtended H} | {PartitionToExtended T}
             end
         [] stretch(...) then stretch(factor:P.factor {PartitionToExtended P.1})
         [] duration(...) then duration(seconds:P.seconds {PartitionToExtended P.1})
-        [] drone(...) then drone(note:{PartitionToExtended P.note} amount:P.amount)
+        [] drone(...) then drone(note:{PartitionToExtended [P.note]} amount:P.amount)
         [] mute(...) then {PartitionToExtended drone(note:silence amount:P.amount)}
         [] transpose(...) then transpose(semitones:P.semitones {PartitionToExtended P.1})
         else
@@ -105,6 +109,7 @@ define
     */
 
     fun{HandleDrone D}
+        {System.show D}
         {HandleDroneAux D.note D.amount 0}
     end
 

@@ -164,23 +164,31 @@ define
    end
 
    proc {TestDrone P2T}
-      P1 = [ drone(note:c amount:3) d e d c e drone(note:d amount:2) c]
+      P1 = [ drone(note:c amount:3) f a drone(note:[c e g] amount:2) c]
       E1 = [
-         % Repetition 1
+         % Repetition 1: note
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
          note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
 
-         % Repetition 2
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-         note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-      
+         
+         note(name:f octave:4 sharp:false duration:1.0 instrument:none) 
+         note(name:a octave:4 sharp:false duration:1.0 instrument:none) 
+         
+         % Repetition 2: chords
+         [
+            note(duration:1.0 instrument:none name:c octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:e octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:g octave:4 sharp:false)
+         ] 
+         
+         [
+            note(duration:1.0 instrument:none name:c octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:e octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:g octave:4 sharp:false)
+         ] 
+         
+         note(duration:1.0 instrument:none name:c octave:4 sharp:false)
       ]
    in
       {AssertEquals {P2T P1} E1 'TestDrone'}
@@ -232,7 +240,20 @@ define
    end
 
    proc {TestEmptyChords P2T}
-     skip
+     P1 = [a b [c d] e [nil]]
+     E1 = [
+      note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+
+      [note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:4 sharp:false duration:1.0 instrument:none)]
+
+      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+
+      silence(duration:0.0)
+      ]
+   in 
+      {AssertEquals {P2T P1} E1 'TestEmptyChords'}
    end
       
    proc {TestP2T P2T}
