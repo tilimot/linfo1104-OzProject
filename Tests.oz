@@ -99,24 +99,40 @@ define
 
    proc {TestIdentity P2T}
       % test that extended notes and chord go from input to output unchanged
-      skip
+      P1 = [a0 [b1 c#2] d#3 e silence]
+      E1 = [
+         note(duration:1.0 instrument:none name:a octave:0 sharp:false) 
+         [
+            note(duration:1.0 instrument:none name:b octave:1 sharp:false) 
+            note(duration:1.0 instrument:none name:c octave:2 sharp:true)
+         ] 
+         note(duration:1.0 instrument:none name:d octave:3 sharp:true) 
+         note(duration:1.0 instrument:none name:e octave:4 sharp:false) 
+         silence(duration:1.0)
+         ]
+   in
+      {AssertEquals {P2T P1} E1 'TestIdentity'}
    end
 
    proc {TestDuration P2T}
-      P1 = [ g duration(seconds:10.0 [a b c#4 d#4 silence]) duration(seconds:1.0 [a b c#4 d#4 silence]) f e ]
+      P1 = [ g duration(seconds:10.0 [a [b c#4] d#4 silence]) duration(seconds:1.0 [a [b c#4] d#4 silence]) f e ]
       E1 = [
             % Duration n°1: duration > initial total time 
             note(name:g octave:4 sharp:false duration:1.0 instrument:none)
             note(name:a octave:4 sharp:false duration:2.0 instrument:none) 
-            note(name:b octave:4 sharp:false duration:2.0 instrument:none) 
-            note(name:c octave:4 sharp:true duration:2.0 instrument:none)
+
+            [note(name:b octave:4 sharp:false duration:2.0 instrument:none) 
+            note(name:c octave:4 sharp:true duration:2.0 instrument:none)]
+
             note(name:d octave:4 sharp:true duration:2.0 instrument:none)
             silence(duration:2.0)
 
             % Duration n°2: duration < initial total time
-            note(name:a octave:4 sharp:false duration:0.2 instrument:none) 
-            note(name:b octave:4 sharp:false duration:0.2 instrument:none) 
-            note(name:c octave:4 sharp:true duration:0.2 instrument:none)
+            note(name:a octave:4 sharp:false duration:0.2 instrument:none)
+
+            [note(name:b octave:4 sharp:false duration:0.2 instrument:none) 
+            note(name:c octave:4 sharp:true duration:0.2 instrument:none)]
+
             note(name:d octave:4 sharp:true duration:0.2 instrument:none)
             silence(duration:0.2)
             note(name:f octave:4 sharp:false duration:1.0 instrument:none)
@@ -126,22 +142,26 @@ define
    end
 
    proc {TestStretch P2T}
-      P1 = [ g stretch(factor:2.0 [a b c#4 d#4 silence]) stretch(factor:0.2 [a b c#4 d#4 silence]) stretch(factor:3.0 [stretch(factor:2.0 [a c#4 silence])])f e ]
+      P1 = [ g stretch(factor:2.0 [a [b c#4] d#4 silence]) stretch(factor:0.2 [a [b c#4] d#4 silence]) stretch(factor:3.0 [stretch(factor:2.0 [a c#4 silence])])f e ]
 
       E1 = [
             note(name:g octave:4 sharp:false duration:1.0 instrument:none)
 
             % Stretch n°1 : factor > 1
             note(name:a octave:4 sharp:false duration:2.0 instrument:none) 
-            note(name:b octave:4 sharp:false duration:2.0 instrument:none) 
-            note(name:c octave:4 sharp:true duration:2.0 instrument:none)
+            
+            [note(name:b octave:4 sharp:false duration:2.0 instrument:none) 
+            note(name:c octave:4 sharp:true duration:2.0 instrument:none)]
+
             note(name:d octave:4 sharp:true duration:2.0 instrument:none)
             silence(duration:2.0)
 
             % Stretch n°2: factor < 1
             note(name:a octave:4 sharp:false duration:0.2 instrument:none) 
-            note(name:b octave:4 sharp:false duration:0.2 instrument:none) 
-            note(name:c octave:4 sharp:true duration:0.2 instrument:none)
+
+            [note(name:b octave:4 sharp:false duration:0.2 instrument:none) 
+            note(name:c octave:4 sharp:true duration:0.2 instrument:none)]
+
             note(name:d octave:4 sharp:true duration:0.2 instrument:none)
             silence(duration:0.2)
 
@@ -156,22 +176,31 @@ define
    end
 
    proc {TestDrone P2T}
-      P1 = [ drone(note:c amount:3) d e d c e drone(note:d amount:2) c]
+      P1 = [ drone(note:c amount:3) f a drone(note:[c e g] amount:2) c]
       E1 = [
-         % Repetition 1
+         % Repetition 1: note
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
          note(name:c octave:4 sharp:false duration:1.0 instrument:none) 
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
 
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-         note(name:e octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:d octave:4 sharp:false duration:1.0 instrument:none) 
-         note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-      
+         
+         note(name:f octave:4 sharp:false duration:1.0 instrument:none) 
+         note(name:a octave:4 sharp:false duration:1.0 instrument:none) 
+         
+         % Repetition 2: chords
+         [
+            note(duration:1.0 instrument:none name:c octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:e octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:g octave:4 sharp:false)
+         ] 
+         
+         [
+            note(duration:1.0 instrument:none name:c octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:e octave:4 sharp:false) 
+            note(duration:1.0 instrument:none name:g octave:4 sharp:false)
+         ] 
+         
+         note(duration:1.0 instrument:none name:c octave:4 sharp:false)
       ]
    in
       {AssertEquals {P2T P1} E1 'TestDrone'}
@@ -181,11 +210,17 @@ define
       P1 = [ c mute(amount:3) a mute(amount:1) c]
       E1 = [
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+
+         %Mute n°1
          silence(duration:1.0)
          silence(duration:1.0)
          silence(duration:1.0)
+
          note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+
+         % Mute n°2
          silence(duration:1.0)
+         
          note(name:c octave:4 sharp:false duration:1.0 instrument:none)
       ] 
    in 
@@ -193,24 +228,77 @@ define
    end
 
    proc {TestTranspose P2T}
-      P1 = [transpose(semitones:15 [b c5 d9 c5 g])]
+      P1 = [transpose(semitones:15 [b c#5 d9]) transpose(semitones:0 [b c#5 d9]) transpose(semitones:4 [b [d9 a g] c#5])]
       E1 = [
-         note(name:d octave:6 sharp:false duration:1.0 instrument:none)
-         note(name:d octave:6 sharp:true duration:1.0 instrument:none)
-         note(name:g octave:10 sharp:true duration:1.0 instrument:none)
-         note(name:d octave:6 sharp:true duration:1.0 instrument:none)
-         note(name:c octave:6 sharp:true duration:1.0 instrument:none)
+      % Transpose n°1: transpose > 11
+      note(duration:1.0 instrument:none name:d octave:6 sharp:false) 
+      note(duration:1.0 instrument:none name:e octave:6 sharp:false) 
+      note(duration:1.0 instrument:none name:f octave:10 sharp:false)
+      
+      % Transpose n°2: transpose = 0
+      note(duration:1.0 instrument:none name:b octave:4 sharp:false)
+      note(duration:1.0 instrument:none name:c octave:5 sharp:true)
+      note(duration:1.0 instrument:none name:d octave:9 sharp:false)
+
+      % Transpose n°3: with chords
+      note(duration:1.0 instrument:none name:d octave:5 sharp:true)
+
+      [note(duration:1.0 instrument:none name:f octave:9 sharp:true) 
+      note(duration:1.0 instrument:none name:c octave:5 sharp:true) 
+      note(duration:1.0 instrument:none name:b octave:4 sharp:false)] 
+      
+      note(duration:1.0 instrument:none name:f octave:5 sharp:false)
       ]
    in 
       {AssertEquals {P2T P1} E1 'TestTranspose'}
    end
 
    proc {TestP2TChaining P2T}
-      skip
+      P1 = [
+         transpose(semitones:3 [
+            stretch(factor:2.0 [
+               duration(seconds:5.0 
+                  [drone(note:a amount:2) b silence [c d] mute(amount:2)]
+               )]
+            )]
+         )
+      ]
+
+      E1 = [
+         note(duration:1.25 instrument:none name:c octave:5 sharp:false) 
+         note(duration:1.25 instrument:none name:c octave:5 sharp:false) 
+
+         note(duration:1.25 instrument:none name:d octave:5 sharp:false) 
+
+         silence(duration:1.25) 
+         [
+            note(duration:1.25 instrument:none name:d octave:4 sharp:true) 
+            note(duration:1.25 instrument:none name:f octave:4 sharp:false)
+            ]
+
+         silence(duration:1.25) 
+         silence(duration:1.25)
+         ]
+   in 
+      {AssertEquals {P2T P1} E1 'TestP2TChaining'}
    end
 
    proc {TestEmptyChords P2T}
-     skip
+     P1 = [a b [c d] e [nil]]
+     E1 = [
+      note(name:a octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:b octave:4 sharp:false duration:1.0 instrument:none)
+
+      [note(name:c octave:4 sharp:false duration:1.0 instrument:none)
+      note(name:d octave:4 sharp:false duration:1.0 instrument:none)]
+
+      note(name:e octave:4 sharp:false duration:1.0 instrument:none)
+
+      % Empty chords representation
+      silence(duration:0.0)
+      ]
+   in 
+      {AssertEquals {P2T P1} E1 'TestEmptyChords'}
    end
       
    proc {TestP2T P2T}

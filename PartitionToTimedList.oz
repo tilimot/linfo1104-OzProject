@@ -32,25 +32,36 @@ define
         end
     end
 
+    % Extend Chords and store it into a record
+    fun {ChordToExtended Chord}
+        chord({Map Chord NoteToExtended})
+    end
+
 
     % Run trough the given Partition and transform each notes into extended note
     fun {PartitionToExtended P}
         case P of
            nil then nil
-        [] H|T then {PartitionToExtended H} | {PartitionToExtended T}
+        [] H|T then 
+            if {IsList H} then 
+                if H==[nil] then 
+                    silence(duration:0.0)|{PartitionToExtended T}
+                else 
+                    {ChordToExtended H} | {PartitionToExtended T}
+                end
+            else 
+                {PartitionToExtended H} | {PartitionToExtended T}
+            end
         [] stretch(...) then stretch(factor:P.factor {PartitionToExtended P.1})
         [] duration(...) then duration(seconds:P.seconds {PartitionToExtended P.1})
-        [] drone(...) then drone(note:{PartitionToExtended P.note} amount:P.amount)
+        [] drone(...) then drone(note:{PartitionToExtended [P.note]} amount:P.amount)
         [] mute(...) then {PartitionToExtended drone(note:silence amount:P.amount)}
         [] transpose(...) then transpose(semitones:P.semitones {PartitionToExtended P.1})
         else
-           if {IsList P} then
-              {HandleChord P}
-           else
-              {NoteToExtended P}
-           end
+            {NoteToExtended P}
         end
-     end
+    end
+    
      
 
 
@@ -67,14 +78,9 @@ define
         [] transpose(...) then {HandleTranspose P}
         [] note(...) then P
         [] silence(...) then P
-        else
-           if {IsList P} then
-              {Map P ApplyTransform}
-           else
-              P
-           end
+        [] chord(...) then P 
         end
-     end
+    end
      
 
 
@@ -90,9 +96,10 @@ define
         case P of nil then nil
         [] H|T then {Stretch H F}|{Stretch T F}
         [] note(...) then note(name:P.name octave:P.octave sharp:P.sharp duration:P.duration*F instrument:none)
+        [] chord(Chord) then chord({Stretch Chord F})
         [] silence(...) then silence(duration:P.duration*F)
         else
-            {Stretch {ApplyTransform P} F} % Risk of StackOverflow. Maybe prefer to returns directly the element P
+            {Stretch {ApplyTransform P} F}
         end
     end
 
@@ -119,31 +126,20 @@ define
     */
 
     fun{HandleDuration D}
-        %Partition -> D.1
-        %Factor-> ExpectedTime/CurrentTime
         {Stretch D.1 D.seconds/{CurrentTotalTime D.1 0.0}}
-    end
+    end  
 
 
     fun{CurrentTotalTime P Acc}
-        case P of nil then Acc                                                          %          _         _ 
-        [] H|T then {CurrentTotalTime T Acc+{CurrentTotalTime H 0.0}} % not so recursive terminale  \_(°-°)_/
+        case P of nil then Acc                                                     
+        [] H|T then {CurrentTotalTime T Acc+{CurrentTotalTime H 0.0}}
         [] note(...) then Acc+P.duration
+        [] chord(Chord) then Acc + {CurrentTotalTime Chord 0.0} 
         [] silence(...) then Acc+P.duration
         else
             Acc+{CurrentTotalTime {ApplyTransform P} 0.0}                                                            
         end
     end    
-
-    /***************** Chord transform *****************
-    */
-    fun {HandleChord Chord}
-        case Chord of
-            nil then nil
-        [] H|T then
-            {NoteToExtended H} | {HandleChord T}
-        end
-    end
 
 
     /***************** Transposition transform *****************
@@ -158,6 +154,7 @@ define
         [] H|T then {Transpose Semitones H} | {Transpose Semitones T}
         [] silence(...) then Note
         [] note(...) then {TransposeNote Semitones Note}
+        [] chord(...) then {TransposeChord Semitones Note}
         else
             {Transpose Semitones {ApplyTransform Note}}
         end
@@ -197,47 +194,35 @@ define
     end
 
 
-    /*
-    local Index NewIndex NewOctave NewName Sharp NoteToPos PosToNote in
-        fun {TransposeNote Semitones Note}
-            
-            NoteToPos = noteIndex(c:0 d:2 e:4 f:5 g:7 a:9 b:11)
-            PosToNote = indexNote(
-                0:note(name:c sharp:false)
-                1:note(name:c sharp:true)
-                2:note(name:d sharp:false)
-                3:note(name:d sharp:true)
-                4:note(name:e sharp:false)
-                5:note(name:f sharp:false)
-                6:note(name:f sharp:true)
-                7:note(name:g sharp:false)
-                8:note(name:g sharp:true)
-                9:note(name:a sharp:false)
-                10:note(name:a sharp:true)
-                11:note(name:b sharp:false)
-            )
-            
-            Index = if Note.sharp == true then
-                        Index = NoteToPos.(Note.name)+1
-                    else
-                        Index = NoteToPos.(Note.name)
-                    end
-            
-            NewIndex = (Index + Semitones) mod 12
-            NewOctave = Note.octave + ((Index + Semitones) div 12)
-            NewName = PosToNote.NewIndex.name
-            Sharp = PosToNote.NewIndex.sharp
-            note(name:NewName octave:NewOctave sharp:Sharp duration:Note.duration instrument:Note.instrument)
+    fun {TransposeChord Semitones Chord}
+        case Chord of nil then nil
+        [] chord(Chord) then
+            chord({TransposeChord Semitones Chord})
+        [] H|T then 
+            {TransposeNote Semitones H} | {TransposeChord Semitones T}
         end
     end
-    */
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ChordToList %%%%%%%%%%%%%%%%%%%%%%%%
+
+    fun {ChordToList Partition}
+        case Partition of nil then nil
+        [] H|T then
+            case H of chord(Chord) then 
+                Chord | {ChordToList T}
+            else
+                H | {ChordToList T}
+            end
+        end
+    end
 
 
     %%%%%%%%%%%%%%%%%%%%%%%% PartionToTimeList %%%%%%%%%%%%%%%%%%%%%%%%
 
     fun {PartitionToTimedList Partition}
 
-        {Flatten {ApplyTransform {PartitionToExtended Partition}}}
+        {ChordToList {Flatten {ApplyTransform {PartitionToExtended Partition}}}}
     end
 
 

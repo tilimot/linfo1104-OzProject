@@ -270,46 +270,9 @@ define
    %Mix
    fun {Mix P2T Music}
          Samples = {MixAux P2T Music}.1
-         {System.show Samples}
-      in
-         %{LimitList Samples.1}
-         %{Property.put print print(width:100000)}
-         %{Property.put print print(depth:100000)}
-         
-         Samples.1
-         
+      in 
+         Samples.1      
    end
    
    
-
-
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      %TEST
-
-   %    P2 = [
-   %       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:c octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:d octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:e octave:4 sharp:false duration:2.0 instrument:none)
-   %       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
-   %       note(name:e octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:f octave:4 sharp:false duration:1.0 instrument:none)
-   %       note(name:g octave:4 sharp:false duration:2.0 instrument:none)
-   %    ]
-
-   %    fun {TmpP2T Partition}
-   %       Partition
-   %    end
-
-   %    Musique = [partition(P2)]
-   %    Sample = {Mix TmpP2T Musique}
-
-   %    {System.show {Length Sample}}
-   %    {Project2025.run Mix TmpP2T Musique "output.wav" nil}
-
 end
