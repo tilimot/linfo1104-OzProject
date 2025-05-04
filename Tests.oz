@@ -319,23 +319,31 @@ define
    % TEST Mix
 
    proc {TestSamples P2T Mix}
-     % E1 = [0.1 ~0.2 0.3]
-      %M1 = [samples(E1)]
-      skip
-   %in
-      %{AssertEquals {Mix P2T M1} E1 'TestSamples: simple'}
+      P1 = [samples([0.1 ~0.2 0.3])]
+      E1 = [0.1 ~0.2 0.3]
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestSamples'}
    end
-   
+
    proc {TestPartition P2T Mix}
-      skip
+      P1 = [partition([note(name:c octave:4 sharp:false duration:1.0 instrument:none)])]
+      E1 = %[0.0 0.0186334 0.0372409 0.0557967 0.0742749 0.09265 0.110896 0.128989 0.146902 0.164611]
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestPartition'}
    end
-   
+
    proc {TestWave P2T Mix}
-      skip
+      P1 = [wave("wave/animals/cat.wav")]
+      E1 = try {Project2025.load "wave/animals/cat.wav"} catch _ then nil end
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestWave'}
    end
 
    proc {TestMerge P2T Mix}
-      skip
+      P1 = [merge([1.0#[samples([0.1 0.2])] 0.5#[samples([0.3 0.4])]])]
+      E1 = [0.25 0.4]
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestMerge'}
    end
 
    proc {TestReverse P2T Mix}
@@ -343,19 +351,31 @@ define
    end
 
    proc {TestRepeat P2T Mix}
-      skip
+      P1 = [repeat(amount:3 music:samples([0.1 0.2]))]
+      E1 = [0.1 0.2 0.1 0.2 0.1 0.2]
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestRepeat'}
    end
 
    proc {TestLoop P2T Mix}
-      skip
+      P1 = [loop(duration:0.0001 music:samples([0.1 0.2]))]
+      E1 = [0.1 0.2 0.1 0.2]
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestLoop'}
    end
 
    proc {TestClip P2T Mix}
-      skip
+      P1 = [clip(low:~0.2 high:0.2 music:samples([~0.3 0.0 0.3]))]
+      E1 = [~0.2 0.0 0.2]
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestClip'}
    end
 
    proc {TestEcho P2T Mix}
-      skip
+      P1 = [echo(delay:0.1 decay:0.5 repeat:2 music:samples([0.1 0.2]))]
+      E1 = [0.1 0.2 0.05 0.1 0.025 0.05]
+   in
+      {AssertEquals {Mix P2T P1} E1 'TestEcho'}
    end
 
    proc {TestFade P2T Mix}
