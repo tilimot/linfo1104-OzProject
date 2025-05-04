@@ -99,7 +99,7 @@ define
         [] chord(Chord) then chord({Stretch Chord F})
         [] silence(...) then silence(duration:P.duration*F)
         else
-            {Stretch {ApplyTransform P} F} % Risk of StackOverflow. Maybe prefer to returns directly the element P
+            {Stretch {ApplyTransform P} F}
         end
     end
 
@@ -126,15 +126,13 @@ define
     */
 
     fun{HandleDuration D}
-        %Partition -> D.1
-        %Factor-> ExpectedTime/CurrentTime
         {Stretch D.1 D.seconds/{CurrentTotalTime D.1 0.0}}
     end  
 
 
     fun{CurrentTotalTime P Acc}
-        case P of nil then Acc                                                          %          _         _ 
-        [] H|T then {CurrentTotalTime T Acc+{CurrentTotalTime H 0.0}} % not so recursive terminale  \_(°-°)_/
+        case P of nil then Acc                                                     
+        [] H|T then {CurrentTotalTime T Acc+{CurrentTotalTime H 0.0}}
         [] note(...) then Acc+P.duration
         [] chord(Chord) then Acc + {CurrentTotalTime Chord 0.0} 
         [] silence(...) then Acc+P.duration

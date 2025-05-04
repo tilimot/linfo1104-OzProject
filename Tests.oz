@@ -99,7 +99,19 @@ define
 
    proc {TestIdentity P2T}
       % test that extended notes and chord go from input to output unchanged
-      skip
+      P1 = [a0 [b1 c#2] d#3 e silence]
+      E1 = [
+         note(duration:1.0 instrument:none name:a octave:0 sharp:false) 
+         [
+            note(duration:1.0 instrument:none name:b octave:1 sharp:false) 
+            note(duration:1.0 instrument:none name:c octave:2 sharp:true)
+         ] 
+         note(duration:1.0 instrument:none name:d octave:3 sharp:true) 
+         note(duration:1.0 instrument:none name:e octave:4 sharp:false) 
+         silence(duration:1.0)
+         ]
+   in
+      {AssertEquals {P2T P1} E1 'TestIdentity'}
    end
 
    proc {TestDuration P2T}
@@ -236,7 +248,33 @@ define
    end
 
    proc {TestP2TChaining P2T}
-      skip
+      P1 = [
+         transpose(semitones:3 [
+            stretch(factor:2.0 [
+               duration(seconds:5.0 
+                  [drone(note:a amount:2) b silence [c d] mute(amount:2)]
+               )]
+            )]
+         )
+      ]
+
+      E1 = [
+         note(duration:1.25 instrument:none name:c octave:5 sharp:false) 
+         note(duration:1.25 instrument:none name:c octave:5 sharp:false) 
+
+         note(duration:1.25 instrument:none name:d octave:5 sharp:false) 
+
+         silence(duration:1.25) 
+         [
+            note(duration:1.25 instrument:none name:d octave:4 sharp:true) 
+            note(duration:1.25 instrument:none name:f octave:4 sharp:false)
+            ]
+
+         silence(duration:1.25) 
+         silence(duration:1.25)
+         ]
+   in 
+      {AssertEquals {P2T P1} E1 'TestP2TChaining'}
    end
 
    proc {TestEmptyChords P2T}
